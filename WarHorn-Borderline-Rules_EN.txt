@@ -410,7 +410,7 @@ One side runs out of stones and both sides pass consecutively → endgame.
 - Fix:
   1. `ScoreCalculator.is_enclosure_formed_by_sieged` made public (was `_is_enclosure_formed_by_sieged`) and changed to existence check via `sieged_stones_set.has(idx)` — compatible with both color values and `true`-valued sets (the original `get(idx) == color` crashed at runtime when a bool set was passed)
   2. `BoardView._draw_territory_fills` skips invalid enclosures and no longer fills their territory
-  3. `GameScreen`'s game log marks invalid enclosures with "【无效-由围困棋子围成】" (invalid — formed by sieged stones)
+  3. `GameScreen`'s game log marks invalid enclosures with "[Invalid - formed by sieged stones]" (shown in the localized game log)
 - Verification: in a real game move 71 the point (17,0) was judged invalid (all other enclosures valid); main tests 956 + UI 121 passed; added C4b regression assertion
 
 **Changelog (2026-08-15 territory-effect display consistency fix):**
