@@ -1,178 +1,182 @@
-# 战争号角 · 边境线
+# War Horn · Borderline
 
-> 一款受围棋启发的双人回合制战略棋类游戏。在 19×19 棋盘上以「边境线」划分疆域，通过围空、围困、歼灭等多种动态计分机制展开博弈。
+> A Go-inspired two-player turn-based strategy game. On a 19×19 board divided by the "Borderline", players battle through dynamic scoring mechanics such as territory, siege, and annihilation.
 
-> English: [README_EN.md](README_EN.md)
+- Engine: Godot 4.7
+- Genre: Two-player turn-based strategy
+- Duration: 30–60 minutes per game
+- Platform: Windows (cross-platform buildable)
 
-- 引擎：Godot 4.7
-- 类型：双人回合制策略
-- 时长：30–60 分钟 / 局
-- 平台：Windows（可跨平台编译）
+## Gameplay
 
-## 核心玩法
+### Match Flow: Deployment Phase → Formal Opening
 
-### 对局流程：布局阶段 → 正式开局
+Each match has two phases:
 
-每局对弈分为两个阶段：
+1. **Deployment Phase**: Both sides take turns placing 2 stones each (4 total) in **their own territory**. Each side has an **independent 2-minute countdown** (displayed on each score panel; a golden breathing light shows whose turn it is to deploy, and the bar turns red and breathes when under 30 seconds remain). Thinking time is paused during deployment.
+2. **Formal Opening**: Begins automatically when deployment completes or the countdown runs out. A **circular expanding wave** animation (1.4 s) plays at the board center with an opening horn sound, then the thinking clock starts and players may move anywhere.
 
-1. **布局阶段**：双方轮流在**己方领土**各布 2 子（共 4 子），共享 **2 分钟倒计时**（倒计时条显示在双方得分板，金色呼吸灯指示当前轮到谁布局，剩余不足 30 秒整条变红呼吸）。布局期间思考时间暂停计时。
-2. **正式开局**：布局完成或倒计时归零后自动进入，棋盘中央播放**圆形扩散波浪**动画（1.4 秒）并响起开局号角，思考时间开始倒计时，此后可在任意位置落子。
+### Board & Forces
 
-### 棋盘与兵力
+- 19×19 board; **row 10 is the Borderline** and belongs to neither side
+- Rows 1–9 are Black's territory; rows 11–19 are White's territory
+- Each side has **112 stones** (default; adjustable to 90 / 112 / 134 / 152 in the start menu), non-renewable
 
-- 19 路棋盘，**第 10 行为边境线**，不归属任何一方
-- 第 1–9 行为黑方领土，第 11–19 行为白方领土
-- 双方各 **112 子**（默认，可在开始菜单调整为 90 / 112 / 134 / 152），不可再生
-
-### 计分总则
+### Scoring Overview
 
 ```
-总分 = 占领分 + 防御分 - 战损分
+Total = Occupation + Defense - Casualties
 ```
 
-所有分数**盘中实时动态计算**，无需终局数子。
+All scores are **computed live during play** — no endgame counting needed.
 
-| 分数类型 | 构成 | 说明 |
+| Score Type | Components | Description |
 |---|---|---|
-| 占领分 | 活子分 + 围空分 | 在对方领土上的控制力 |
-| 防御分 | 歼灭分 + 围困分 | 在己方领土上的防守战果 |
-| 战损分 | — | 被提吃的代价 |
+| Occupation | Live stones + Territory | Control in the opponent's territory |
+| Defense | Annihilation + Siege | Defensive results in your own territory |
+| Casualties | — | Cost of being captured |
 
-### 四大计分机制
+### The Four Scoring Mechanics
 
-1. **活子分**：在对方领土或边境线落子有气 → +1/子
-2. **围空分**：在对方领土或边境线形成包围圈，圈内每点 +2
-3. **歼灭分**：在己方领土或边境线提吃对方棋子 → +2/子
-4. **围困分**：包围对方无两眼且空间不足的棋子 → +1/子（实时动态）
+1. **Live stones**: A stone with liberties in the opponent's territory or on the Borderline → +1/stone
+2. **Territory**: Forming an enclosure in the opponent's territory or on the Borderline → +2 per enclosed point
+3. **Annihilation**: Capturing opponent stones in your own territory or on the Borderline → +2/stone
+4. **Siege**: Surrounding opponent stones that lack two eyes and sufficient space → +1/stone (live dynamic)
 
-### 围困判定
+### Siege Rules
 
-棋子被判定为**围困**需同时满足三个条件：
-1. 被对方包围（纯几何判定）
-2. 未做出两只独立真眼
-3. 圈内可合法落子的空点 < 4
+A stone group is considered **sieged** when all three conditions hold:
+1. Surrounded by the opponent (purely geometric)
+2. Has not formed two independent true eyes
+3. Legal empty points inside the enclosure < 4
 
-**非围困即活棋**，不存在「死子」或「双活」概念。
+**Not sieged means alive** — there is no "dead stones" or "seki" concept.
 
-### 虚手与终局
+### Pass & Endgame
 
-- **虚手次数**：每方每局限 **2 次**（布局阶段不可虚手）
-- **不可连续虚手**：本方虚手后不得立刻再次虚手，须待对方落子（或部署）后恢复虚手权
-- **自动终局**：双方连续虚手即终局，系统结算终局分数（含劫争处理与最终死活判定）
-- **强制终局**：一方兵力用尽且双方连续虚手，或双方均无法落子，立即终局
+- **Pass count**: each side is limited to **2 passes** per game (not allowed during deployment)
+- **Pass cooldown**: after a side passes, it must complete 2 of its own turns (move/deploy/bounce) before it may pass again; a side that has never passed may pass anytime
+- **Automatic endgame**: both sides pass consecutively → game ends, and the final score is settled (including ko resolution and final life-death judgment)
+- **Forced endgame**: a side runs out of forces and both sides pass consecutively, or neither side can move → immediate end
 
-## 特色系统
+## Special Systems
 
-### 特种部队（可选规则）
+### Special Forces (optional rule)
 
-隐秘部署的特种棋子，每局 2 次使用机会：
-- **隐身**：对手不可见，到期或被邻接时现形
-- **三种终局奖励**（取最优）：参与围空翻倍 / 潜伏存活 +3 / 边境建功 +50%
-- **重叠弹子**：对手撞隐子时随机弹至周围八格
+Secretly deployed special stones, 2 uses per game:
+- **Stealth**: invisible to the opponent; revealed when their timer expires or an adjacent enemy stone appears
+- **Three endgame bonuses** (best one applies): territory involvement doubles / survival +3 / borderline contribution +50%
+- **Bounce**: when the opponent collides with a hidden stone, it is randomly bounced to one of the 8 surrounding cells
 
-### 贴目系统
+### Komi System
 
-- 默认贴目 **0.5 目**
-- 主菜单可用 `[−]` `[+]` 按钮以 0.5 目步进调整（0.0–20.5）
+- Default komi: **0.5 points**
+- Adjustable in the start menu with `[−]` / `[+]` buttons in 0.5-point steps (0.0–20.5)
 
-### 棋谱回放
+### Replay
 
-内置经典对局棋谱库，支持：
-- 经典对局 / 棋圣名局 / 当代对局三个分类
-- SGF 文件导入
-- 单步前进 / 后退 / 自动播放（0.5x–4x 速度）
-- 任意手数跳转
+Built-in classic game library, supports:
+- Three categories: Classic / Master / Modern games
+- SGF file import
+- Step forward / backward / auto-play (0.5x–4x speed)
+- Jump to any move
 
-### AI 对战
+### AI Opponent
 
-三档难度的 AI 对手：
-- 简单：启发式 AI
-- 中等：前瞻搜索 AI
-- 困难：MCTS 蒙特卡洛树搜索 AI
+Five AI difficulties:
+- Easy: heuristic AI
+- Normal: shallow search AI
+- Hard: standard search AI
+- Expert: search + MCTS on key positions
+- Master: deeper search + more simulations
 
-### 联机对战
+### Online Battle
 
-基于 Godot 高级多人网络（ENet）的联机模式，支持主机/客户端模式。
+LAN multiplayer based on Godot's ENet, with host/client modes. The host sets thinking time / forces / komi and starts a room; the client discovers rooms via UDP broadcast and joins.
 
-## 游戏模式
+### Language Support
 
-| 模式 | 说明 |
+Chinese and English are both supported. Click the language button on the main menu to switch; your preference is saved automatically.
+
+## Game Modes
+
+| Mode | Description |
 |---|---|
-| 本地双人 | 同屏对弈 |
-| 人机对战 | 三档 AI 难度 |
-| 联机对战 | 主机或加入 |
-| 棋谱回放 | 经典对局研习 |
+| Local 2-Player | Play on the same screen |
+| vs AI | Five AI difficulties |
+| Online Battle | Host or join |
+| Replay | Study classic games |
 
-## 开始一局游戏
+## Starting a Game
 
-1. 主菜单选择模式（本地双人 / 人机对战 / 联机对战 / 棋谱回放 / 规则教程）。
-2. 设置对局选项：
-   - **思考时间**：业余（无限制 / 闪电 5 分 / 快棋 15 分 + 30 秒 ×3 / 标准 30 分 + 30 秒 ×3 / 业余 60 分 + 30 秒 ×5）与专业（快棋赛 1 小时 + 30 秒 ×5 / 普通赛 3 小时 + 60 秒 ×5 / 大赛 5 小时 + 60 秒 ×5 / 头衔战 8 小时 + 60 秒 ×5）两组，默认无限制
-   - **贴目**：默认 0.5 目，`[−]` `[+]` 以 0.5 目步进调整（0.0–20.5）
-   - **兵力上限**：90 / 112 / 134 / 152，默认 112
-3. 点击开始进入**布局阶段**（见「对局流程」），布局完成自动**正式开局**。
-4. 联机对战：主机在房间内设定上述选项并点「开始游戏」后，配置推送给客户端，双方同时开局。
+1. On the main menu choose a mode (Local 2-Player / vs AI / Online / Replay / Tutorial).
+2. Set match options:
+   - **Thinking time**: Amateur (Unlimited / Blitz 5m / Rapid 15m+30s×3 / Standard 30m+30s×3 / Amateur 60m+30s×5) and Professional (Pro Rapid 1h+30s×5 / Pro Normal 3h+60s×5 / Pro Grand 5h+60s×5 / Title Match 8h+60s×10); default is Unlimited
+   - **Komi**: default 0.5, `[−]` / `[+]` steps of 0.5 (0.0–20.5)
+   - **Forces**: 90 / 112 / 134 / 152, default 112
+3. Click Start to enter the **deployment phase** (see "Match Flow"); when deployment completes the **formal opening** begins automatically.
+4. Online battle: the host sets the above options in the room and clicks "Start Game"; the config is pushed to the client and both sides start simultaneously.
 
-## 项目结构
+## Project Structure
 
 ```
 .
-├── scenes/              场景文件
+├── scenes/              Scene files
 ├── scripts/
-│   ├── ai/             AI 实现（启发式/前瞻/MCTS）
-│   ├── core/           核心逻辑（棋盘/规则/计分/会话/SGF）
-│   ├── effects/        音效与特效
-│   ├── net/            联机同步
-│   ├── theme/          UI 主题（默认/赛博/像素经典）
-│   └── ui/             界面（主菜单/对局/得分板/回放/棋盘视图）
-├── sgf/                内置棋谱库
-│   ├── classic/        经典对局
-│   ├── masters/        棋圣名局
-│   └── modern/         当代对局
-├── tests/              测试套件（1000+ 用例）
-└── project.godot       Godot 工程配置
+│   ├── ai/             AI implementations (heuristic/search/MCTS)
+│   ├── core/           Core logic (board/rules/scoring/session/SGF/LocaleManager)
+│   ├── effects/        Sound & visual effects
+│   ├── net/            Online sync
+│   ├── theme/          UI themes (default/cyber/pixel-classic)
+│   └── ui/             UI (main menu/game/score panel/replay/board view)
+├── sgf/                Built-in game library
+│   ├── classic/        Classic games
+│   ├── masters/        Master games
+│   └── modern/         Modern games
+├── tests/              Test suite (1000+ cases)
+└── project.godot       Godot project configuration
 ```
 
-## 运行
+## Running
 
-### 从源码运行
+### From Source
 
-1. 安装 [Godot 4.7](https://godotengine.org/)
-2. 用 Godot 打开本项目目录
-3. 按 F5 或点击运行按钮
+1. Install [Godot 4.7](https://godotengine.org/)
+2. Open this project directory with Godot
+3. Press F5 or click the Run button
 
-### 快速启动（Windows）
+### Quick Start (Windows)
 
-双击 `启动游戏.bat` 即可。
+Double-click `启动游戏.bat`.
 
-## 测试
+## Testing
 
-项目包含 1000+ 自动化测试用例，覆盖：
-- 计分规则（围空/围困/歼灭/战损/贴目）
-- 围困判定（包围/两眼/空间）
-- 劫争规则
-- 特种部队
-- 棋谱解析与回放
-- 联机同步
-- AI 决策
+The project includes 1000+ automated test cases covering:
+- Scoring rules (territory/siege/annihilation/casualties/komi)
+- Siege judgment (enclosure/eyes/space)
+- Ko rules
+- Special forces
+- SGF parsing & replay
+- Online sync
+- AI decisions
 
-运行测试：
+Run tests:
 
 ```bash
 godot --headless --script res://tests/run_all.gd
 ```
 
-## 规则文档
+## Rules Document
 
-完整规则书见 [战争号角-边境线规则文档.txt](战争号角-边境线规则文档.txt)（v6.2）。英文版见 [WarHorn-Borderline-Rules_EN.txt](WarHorn-Borderline-Rules_EN.txt)。
+The full rule book is available in English: [WarHorn-Borderline-Rules_EN.txt](WarHorn-Borderline-Rules_EN.txt) (v6.2).
 
-## 技术栈
+## Tech Stack
 
-- **引擎**：Godot 4.7（GDScript）
-- **渲染**：gl_compatibility（跨平台兼容）
-- **网络**：ENet Multiplayer API
-- **架构**：RefCounted 纯逻辑层 + Control UI 层，便于测试与 AI 模拟
+- **Engine**: Godot 4.7 (GDScript)
+- **Rendering**: gl_compatibility (cross-platform)
+- **Network**: ENet Multiplayer API
+- **Architecture**: RefCounted pure logic layer + Control UI layer, easy to test and simulate with AI
 
-## 仓库
+## Repository
 
-- Gitee：https://gitee.com/shamdom888/warhorn-borderline
+- Gitee: https://gitee.com/shamdom888/warhorn-borderline
