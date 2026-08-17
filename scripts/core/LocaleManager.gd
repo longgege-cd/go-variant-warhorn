@@ -17,6 +17,8 @@ var current_locale: String = LOCALE_ZH
 # 翻译表：key -> {locale -> 翻译文本}
 # 新增翻译键时只需在此字典添加一项，无需重启编辑器
 var _translations: Dictionary = {}
+# 行棋拒绝原因翻译表：key = core 层返回的中文 reason 原文，value = 英文翻译
+var _reason_translations: Dictionary = {}
 
 # 格式化参数占位符映射（GDScript 不支持 {n} 直接格式化，需手工替换）
 # 占位符约定：{0} {1} {2} ... 位置参数；{name} 命名参数
@@ -33,6 +35,25 @@ func L(key: String, args: Dictionary = {}) -> String:
 	# 替换命名占位符 {name}
 	for k in args:
 		text = text.replace("{%s}" % k, str(args[k]))
+	return text
+
+# 翻译行棋拒绝原因：core 层（GameSession/GoRules）返回中文 reason，
+# 由 UI 层按当前语言翻译后显示；带参数原因（虚手冷却/弹子点非法）用前缀规则提取。
+func translate_reason(text: String) -> String:
+	if current_locale == LOCALE_ZH:
+		return text
+	# 1. 整句查表
+	if _reason_translations.has(text):
+		return _reason_translations[text]
+	# 2. 虚手冷却带参数：虚手冷却中（还需 N 个己方回合）
+	const PASS_PREFIX: String = "虚手冷却中（还需 "
+	if text.begins_with(PASS_PREFIX):
+		var n: int = int(text.substr(PASS_PREFIX.length()).get_slice(" 个己方回合）", 0))
+		return "Pass cooldown (%d of your own turns needed)" % n
+	# 3. 弹子点意外非法: <原因>
+	const BOUNCE_PREFIX: String = "弹子点意外非法: "
+	if text.begins_with(BOUNCE_PREFIX):
+		return "Unexpected illegal bounce point: " + translate_reason(text.substr(BOUNCE_PREFIX.length()))
 	return text
 
 # 切换语言；同语言不触发信号
@@ -349,7 +370,28 @@ func _init_translations() -> void:
 	_add("tutorial.lesson_complete", "🎉 关卡完成！", "🎉 Lesson Complete!")
 	_add("tutorial.next_btn", "下一关", "Next Lesson")
 	_add("tutorial.remaining_stones", "剩余棋子：黑 {b} / 白 {w}", "Stones left: Black {b} / White {w}")
+	_add("game.room_canceled", "已取消房间", "Room canceled")
+	_add("game.online_exited", "已退出联机模式", "Exited online mode")
+	# 行棋拒绝原因（core 层返回中文，UI 层 translate_reason 运行时翻译）
+	_add_reason("对局已结束", "Game over")
+	_add_reason("非该方行棋", "Not that side's turn")
+	_add_reason("兵力已用尽", "Forces exhausted")
+	_add_reason("越界", "Out of bounds")
+	_add_reason("撞隐子且八格均不可落子，请重新选择", "Collided with a hidden stone; all 8 surrounding cells are unplayable. Choose another point")
+	_add_reason("特种部队不可用（次数/冷却/未开启）", "Special forces unavailable (uses/cooldown/disabled)")
+	_add_reason("该点已有棋子", "A stone already occupies this point")
+	_add_reason("劫争禁着", "Ko move forbidden")
+	_add_reason("自杀禁着", "Suicide move forbidden")
+	_add_reason("对局已结束，无法悔棋", "Game over, cannot undo")
+	_add_reason("无可悔棋历史", "No undo history")
+	_add_reason("一方兵力用尽且双方连续虚手", "Forces exhausted and both sides passed consecutively")
+	_add_reason("双方均无法落子", "Neither side can move")
+	_add_reason("双方连续虚手", "Both sides passed consecutively")
 
 # 注册一条翻译键
 func _add(key: String, zh: String, en: String) -> void:
 	_translations[key] = {LOCALE_ZH: zh, LOCALE_EN: en}
+
+# 注册一条行棋拒绝原因翻译（中文原文 -> 英文）
+func _add_reason(zh: String, en: String) -> void:
+	_reason_translations[zh] = en

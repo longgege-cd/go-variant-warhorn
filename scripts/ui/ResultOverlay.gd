@@ -104,8 +104,8 @@ func _build() -> void:
 	_winner_label.add_theme_color_override("font_color", UITheme.C_GOLD_BRIGHT if winner_color >= 0 else UITheme.C_TEXT)
 	title_row.add_child(_winner_label)
 
-	# 原因
-	var reason_str: String = _result.get("reason", "")
+	# 原因（core 层终局原因可能为中文，按当前语言翻译）
+	var reason_str: String = LocaleManager.translate_reason(_result.get("reason", ""))
 	_reason_label = Label.new()
 	_reason_label.text = reason_str
 	_reason_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

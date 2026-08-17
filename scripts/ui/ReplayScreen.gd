@@ -69,7 +69,7 @@ func _flush_log() -> void:
 func _build_ui() -> void:
 	# 返回主菜单按钮（左上角悬浮，不占用布局空间）
 	var back_btn := Button.new()
-	back_btn.text = "← 返回主菜单"
+	back_btn.text = LocaleManager.L("replay.back")
 	back_btn.set_anchors_preset(PRESET_TOP_LEFT)
 	back_btn.offset_left = 12
 	back_btn.offset_top = 8

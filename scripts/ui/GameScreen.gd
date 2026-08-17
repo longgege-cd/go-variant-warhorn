@@ -403,7 +403,7 @@ func _on_room_wait_canceled() -> void:
 		_room_wait_dlg = null
 	RoomDiscovery.stop_broadcasting()
 	stop_online()
-	_show_status("已取消房间")
+	_show_status(LocaleManager.L("game.room_canceled"))
 
 # 客户端收到主机「开始游戏」RPC → 应用配置 + 开始对局
 func _on_net_game_started(time_setting: Dictionary, piece_limit: int, komi: float, special_enabled: bool) -> void:
@@ -558,7 +558,7 @@ func _on_pass() -> void:
 			return
 		var out: Dictionary = NetSync.local_do_pass()
 		if not out.ok:
-			_show_error(out.reason)
+			_show_error(LocaleManager.translate_reason(out.reason))
 		return
 	# PvE：仅玩家回合可虚手（否则会替 AI 虚手，可能造成"单方连续虚手"误判与误触终局）
 	if _pve_mode and session.to_move != Const.BLACK:
@@ -566,7 +566,7 @@ func _on_pass() -> void:
 		return
 	var out: Dictionary = session.do_pass(session.to_move)
 	if not out.ok:
-		_show_error(out.reason)
+		_show_error(LocaleManager.translate_reason(out.reason))
 
 func _on_resign() -> void:
 	if session == null:
@@ -642,7 +642,7 @@ func _on_undo() -> void:
 			break
 		actual += 1
 	if actual == 0:
-		_show_status("无可悔棋历史")
+		_show_status(LocaleManager.L("game.no_undo_history"))
 		return
 	# 悔棋后刷新视图（move_committed 信号已自动刷新，但 last_move 需重置）
 	if board_view != null:
@@ -710,7 +710,7 @@ func _on_cell_clicked(row: int, col: int) -> void:
 		else:
 			out = session.play_move(mover, row, col)
 		if not out.ok:
-			_show_error(out.reason)
+			_show_error(LocaleManager.translate_reason(out.reason))
 		return
 	if _deploy_mode:
 		if _online_mode:
@@ -721,7 +721,7 @@ func _on_cell_clicked(row: int, col: int) -> void:
 				if board_view != null:
 					board_view.set_deploy_mode(false)
 			else:
-				_show_error(out.reason)
+				_show_error(LocaleManager.translate_reason(out.reason))
 			_update_controls()
 			return
 		var out: Dictionary = session.deploy_special(session.to_move, row, col)
@@ -730,18 +730,18 @@ func _on_cell_clicked(row: int, col: int) -> void:
 			if board_view != null:
 				board_view.set_deploy_mode(false)
 		else:
-			_show_error(out.reason)
+			_show_error(LocaleManager.translate_reason(out.reason))
 		_update_controls()
 		return
 	if _online_mode:
 		# 联机落子：通过 NetSync 路由（本地执行 + RPC 同步）
 		var out: Dictionary = NetSync.local_play_move(row, col)
 		if not out.ok:
-			_show_error(out.reason)
+			_show_error(LocaleManager.translate_reason(out.reason))
 		return
 	var out: Dictionary = session.play_move(session.to_move, row, col)
 	if not out.ok:
-		_show_error(out.reason)
+		_show_error(LocaleManager.translate_reason(out.reason))
 
 func _on_move_committed(outcome: Dictionary) -> void:
 	board_view.on_move_committed(outcome)
@@ -1460,7 +1460,7 @@ func stop_online() -> void:
 	RoomDiscovery.stop_listening()
 	NetworkManager.close()
 	_new_game()
-	_show_status("已退出联机模式")
+	_show_status(LocaleManager.L("game.online_exited"))
 
 # 获取本机局域网 IP（用于 UDP 广播房间信息）
 # 过滤回环(127.*)、IPv6、链路本地 APIPA(169.254.*，如蓝牙/虚拟网卡)，
