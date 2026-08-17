@@ -147,7 +147,7 @@ Chinese and English are both supported. Click the language button on the main me
 
 ### Quick Start (Windows)
 
-Double-click `启动游戏.bat`.
+Double-click `StartGame.bat`.
 
 ## Testing
 
